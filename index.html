@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Boyita Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <meta name="theme-color" content="#ffffff">
+  <script type="importmap">
+  {
+    "imports": {}
+  }
+  </script>
+</head>
+<body>
+  <div id="app" class="app-container">
+    <aside id="sideMenu" class="side-menu" aria-hidden="false">
+      <div class="menu-header">Temas</div>
+      <div class="theme-list">
+        <button class="theme-btn" data-theme="original">Original</button>
+        <button class="theme-btn" data-theme="rosa">Rosa</button>
+        <button class="theme-btn" data-theme="bosque">Bosque</button>
+        <button class="theme-btn" data-theme="noche">Noche</button>
+      </div>
+
+      <!-- Baby name input -->
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+        <label style="font-weight:700;color:var(--accent);font-size:13px">Nombre del bebé</label>
+        <input id="babyName" type="text" placeholder="Ej. Mateo" style="padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);">
+      </div>
+
+      <div class="menu-actions">
+        <button id="resetAll" class="btn destructive">Reset DB</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <nav class="tabs" role="tablist" aria-label="Secciones">
+        <button id="toggleMenu" class="icon-btn" aria-label="Abrir temas">☰</button>
+        <button class="tab active" data-tab="registro">Registro</button>
+        <button class="tab" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="historial">Historial</button>
+      </nav>
+
+      <section id="registro" class="panel active">
+        <div class="card-row">
+          <section class="card" id="milkCard">
+            <h3>Leche 🍼</h3>
+            <div class="row" style="margin-top:8px">
+              <button id="milkStartBtn" class="btn">Comenzar toma</button>
+            </div>
+            <div class="row" style="margin-top:8px;flex-direction:column;align-items:stretch">
+              <label for="milkNotes">Notas</label>
+              <textarea id="milkNotes" placeholder="Notas de la toma (ej. cólera, burbujeo, observaciones)" rows="2" style="padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);resize:none"></textarea>
+            </div>
+
+            <!-- Numeric modal for milk start/end (hidden by default) -->
+            <div id="milkModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;padding:20px;z-index:60">
+              <div style="background:var(--card);padding:16px;border-radius:12px;max-width:420px;width:100%;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px">
+                <div id="milkModalTitle" style="font-weight:600">Registrar onzas</div>
+                <label style="font-size:13px;color:var(--muted)">Onzas (solo valores numéricos)</label>
+                <input id="milkModalInput" type="number" step="0.1" min="0" inputmode="decimal" style="padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);font-size:16px">
+                <div style="display:flex;gap:8px;justify-content:flex-end">
+                  <button id="milkModalCancel" class="btn" style="background:rgba(0,0,0,0.08);color:var(--text)">Cancelar</button>
+                  <button id="milkModalOk" class="btn">OK</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card" id="diaperCard">
+            <h3>Pañal 💩</h3>
+            <div class="row">
+              <label>Tipo</label>
+              <select id="diaperType">
+                <option value="pipi">Pipi</option>
+                <option value="popo">Popo</option>
+              </select>
+            </div>
+
+            <!-- Dynamic control: for 'pipi' show nivel options, for 'popo' show texturas -->
+            <div class="row" id="diaperLevelRow" style="flex-direction:column;align-items:stretch">
+              <label id="diaperLevelLabel">Nivel / Textura</label>
+              <div id="diaperLevelWrap" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+            </div>
+
+            <div class="row" style="margin-top:8px;flex-direction:column;align-items:stretch">
+              <label for="diaperNotes">Notas</label>
+              <textarea id="diaperNotes" placeholder="Notas del pañal (ej. erupciones, olor, observaciones)" rows="2" style="padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);resize:none"></textarea>
+            </div>
+
+            <div class="row">
+              <button id="diaperSaveBtn" class="btn">Guardar Pañal</button>
+            </div>
+          </section>
+        </div>
+
+        <section class="card" id="sleepCard">
+          <h3>Sueño 😴</h3>
+          <div class="row" style="align-items:center">
+            <button id="sleepToggleBtn" class="btn" aria-pressed="false">Inicio de sueño</button>
+            <div id="sleepTimer" class="timer" style="margin-left:8px;min-width:80px;text-align:center">00:00:00</div>
+          </div>
+          <div class="row" style="margin-top:8px;flex-direction:column;align-items:stretch">
+            <label for="sleepNotes">Notas de sueño</label>
+            <textarea id="sleepNotes" placeholder="Notas del sueño (ej. condición al dormir, despertó por...)" rows="2" style="padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);resize:none"></textarea>
+          </div>
+        </section>
+
+        <section class="card" id="gasCard">
+          <h3>Gases 💨</h3>
+          <div class="row" style="gap:12px;flex-wrap:wrap">
+            <button id="gasFartBtn" class="btn" style="background:rgba(0,0,0,0.04);color:var(--text)">Peditos</button>
+            <button id="gasBurpBtn" class="btn" style="background:rgba(0,0,0,0.04);color:var(--text)">Eructos</button>
+          </div>
+          <div class="row" style="margin-top:8px;flex-direction:column;align-items:stretch">
+            <label for="gasNotes">Notas</label>
+            <textarea id="gasNotes" placeholder="Notas de gases (ej. frecuencia, reacción)" rows="2" style="padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);resize:none"></textarea>
+          </div>
+        </section>
+      </section>
+
+
+
+      <section id="dashboard" class="panel">
+        <div class="card">
+          <div class="grid-2" style="align-items:center">
+            <div>
+              <h3>Resumen</h3>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+                <button class="filter-btn" data-range="24h">Últimas 24h</button>
+                <button class="filter-btn" data-range="day">Hoy</button>
+                <button class="filter-btn" data-range="week">Semana</button>
+                <button class="filter-btn" data-range="month">Mes</button>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;margin:8px 0">
+                <label style="font-size:13px;color:var(--muted);min-width:36px">Desde</label>
+                <input id="rangeFrom" type="date">
+                <label style="font-size:13px;color:var(--muted);min-width:28px">Hasta</label>
+                <input id="rangeTo" type="date">
+                <button id="applyRange" class="btn" style="padding:8px 10px">Aplicar</button>
+              </div>
+
+              <div id="summaryStats" style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between">
+                  <div style="color:var(--muted)">Tomadas (oz)</div>
+                  <div id="statMilk">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bottle-wrap">
+              <h3 style="margin:0">Biberón</h3>
+              <svg id="bottleSvg" viewBox="0 0 120 320" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs>
+                  <clipPath id="bottleClip">
+                    <rect x="20" y="24" width="80" height="260" rx="18" />
+                  </clipPath>
+
+                  <!-- subtle drop shadow for bottle outline -->
+                  <filter id="bottleShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="rgba(0,0,0,0.06)"/>
+                  </filter>
+                </defs>
+
+                <!-- stronger outline with shadow to emphasize contour -->
+                <g id="bottleOutline" fill="none" stroke="rgba(0,0,0,0.14)" stroke-width="2" filter="url(#bottleShadow)">
+                  <rect x="20" y="24" width="80" height="260" rx="18" fill="var(--card)" stroke="none"></rect>
+                  <rect x="36" y="4" width="48" height="40" rx="10" fill="var(--card)"></rect>
+                </g>
+
+                <g id="liquidGroup" clip-path="url(#bottleClip)">
+                  <rect id="liquidFill" x="20" y="200" width="80" height="84" fill="var(--accent)" opacity="0.9"></rect>
+                  <path id="liquidWave" d="M20 260 Q40 250 60 260 T100 260 L100 284 L20 284 Z" fill="rgba(255,255,255,0.1)"></path>
+                </g>
+              </svg>
+
+              <div class="bottle-meta">
+                <div style="display:flex;justify-content:space-between;width:100%">
+                  <div style="color:var(--muted)">Nivel</div><div id="bottlePercent">—</div>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+
+          <!-- separate cards for Pañales, Sueño y Gases -->
+          <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+            <div class="card" style="padding:10px;grid-column:1/-1">
+              <h4 style="margin:0 0 8px 0">Pañales</h4>
+              <div style="font-size:20px;font-weight:600" id="statDiaper">—</div>
+              <div style="color:var(--muted);font-size:13px;margin-top:8px">Conteo en el rango seleccionado</div>
+              <div id="diaperChart" style="margin-top:10px"></div>
+            </div>
+            <div class="card" style="padding:10px;">
+              <h4 style="margin:0 0 8px 0">Sueño</h4>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="font-size:20px;font-weight:600" id="statSleep">—</div>
+                <div id="sleepChart" style="width:80px;height:80px"></div>
+              </div>
+              <div style="color:var(--muted);font-size:13px;margin-top:8px">Duración total en el rango</div>
+            </div>
+            <div class="card" style="padding:10px;grid-column:1/-1">
+              <h4 style="margin:0 0 8px 0">Gases</h4>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="font-size:20px;font-weight:600" id="statGas">—</div>
+                <div id="gasChart" style="width:120px;height:48px"></div>
+              </div>
+              <div style="color:var(--muted);font-size:13px;margin-top:8px">Eventos en el rango</div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <section id="historial" class="panel">
+        <div class="card">
+          <div class="history-controls">
+            <input type="text" id="searchInput" placeholder="Buscar notas o tipo...">
+            <div class="row small">
+              <button id="clearFilters" class="btn">Limpiar filtros</button>
+            </div>
+          </div>
+          <table id="historyTable" class="history-table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Fecha</th>
+                <th>Periodo / Duración</th>
+                <th>Detalles</th>
+                <th>Editar</th>
+                <th>Notas</th>
+              </tr>
+            </thead>
+            <tbody id="historyList"></tbody>
+          </table>
+
+          <div style="margin-top:8px;display:flex;justify-content:flex-end;gap:8px">
+            <button id="exportCsv" class="btn">Exportar CSV</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js" type="module"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    }
+  </script>
+</body>
+</html>
